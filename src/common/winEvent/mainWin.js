@@ -1,8 +1,8 @@
 const { ipcMain, BrowserWindow, screen, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const fishBookWinEvent = require('./fishBookWin.js');
-const sqliteUtils = require('./sqlite3Util');
+const fishBookWinEvent = require('../winEvent/fishBookWin.js');
+const sqlUtils = require('../sqlite/sql.js');
 const readline = require('readline');
 
 // 最小化
@@ -35,7 +35,7 @@ const closeWindow = () => {
 
 const openBookDirectory = () => {
     ipcMain.handle('open-books-folder', (event) => {
-        const directoryPath = path.join(__dirname, '../../fishBook/book');
+        const directoryPath = path.join(__dirname, '../../../fishBook/book');
         try {
             shell.openPath(directoryPath);
         } catch (error) {
@@ -48,60 +48,56 @@ const openBookDirectory = () => {
 const refreshBooks = () => {
     ipcMain.handle('refresh-books', (event) => {
         return new Promise(async (resolve, reject) => {
-            const directoryPath = path.join(__dirname, '../../fishBook/book');
+            const directoryPath = path.join(__dirname, '../../../fishBook/book');
             const files = fs.readdirSync(directoryPath);
             let db;
             try {
-                db = sqliteUtils.open();
+                db = sqlUtils.open();
 
                 for (const fileName of files) {
 
-                    const bookCounts = await sqliteUtils.select(db, "SELECT count(1) as count from book_list WHERE name=?", [fileName]);
-                    if (bookCounts != null && bookCounts.length > 0 && bookCounts[0].count > 0) {
+                    const bookCounts = await sqlUtils.selectOne(db, "SELECT count(1) as count from book_list WHERE name=?", [fileName]);
+                    if (bookCounts != null && bookCounts.count > 0) {
                         // 图书已存在
                         console.log("图书" + fileName + "已存在");
                         continue;
                     }
 
                     const bookLineData = await fileReadLine(fileName);
-
-                    const sql = "INSERT INTO book (name, start, end, content) VALUES ";
-                    let valueSql = "";
-                    let params = [];
-                    const max = 1000;
-                    let length = 0;
+					
+					let dataArr = [];
+					let start = 0;
+					let end = 0;
                     for (let i = 0; i < bookLineData.length; i++) {
-                        var value = bookLineData[i];
-
-                        if (valueSql != "") {
-                            valueSql += ",";
-                        }
-                        valueSql += "(?,?,?,?)";
-                        params.push(fileName);
-                        params.push(length + 1);
-                        params.push(length + value.length);
-                        params.push(value);
-
-                        length += value.length;
-
-                        if (i != 0 && (i % max == 0 || i == bookLineData.length - 1)) {
-                            await sqliteUtils.insert(db, sql + valueSql, params);
-                            valueSql = "";
-                            params = [];
-                        }
-                    }
-                    await sqliteUtils.insert(db, "INSERT INTO book_list(name, words, end) VALUES (?,?,?)", [fileName, length, 1]);
+						var bookLine = bookLineData[i];
+						
+						start = end+1;
+						end = start+bookLine.length-1;
+						
+						dataArr.push({
+							name: fileName, 
+							start: start, 
+							end: end, 
+							content: bookLine
+						});
+					}
+					await sqlUtils.insertBatch(db, "book", dataArr, 1000)
+					
+					await sqlUtils.insert(db, "book_list", {
+						name: fileName, 
+						words: end, 
+						end: 1
+					});
 
                     console.log("图书" + fileName + "添加成功");
                 }
-
+				sqlUtils.close(db);
+				resolve();
             } catch (error) {
-                sqliteUtils.close(db);
+                sqlUtils.close(db);
                 console.log(error);
                 reject(error);
             }
-            sqliteUtils.close(db);
-            resolve("success");
         });
     });
 }
@@ -111,13 +107,12 @@ const getBookInfoList = () => {
         return new Promise(async (resolve, reject) => {
             let db;
             try {
-                db = sqliteUtils.open();
-                const sql = "select * from book_list";
-                const bookInfoList = await sqliteUtils.select(db, sql, []);
+                db = sqlUtils.open();
+                const bookInfoList = await sqlUtils.select(db, "book_list", null, null);
                 resolve(bookInfoList);
             } catch (error) {
                 console.log(error);
-                sqliteUtils.close(db);
+                sqlUtils.close(db);
                 reject(error);
             }
         })
@@ -184,13 +179,12 @@ const initTable = async () => {
         return new Promise(async (resolve, reject) => {
             let db;
             try {
-                db = sqliteUtils.open();
-                await sqliteUtils.create(db, "CREATE TABLE IF NOT EXISTS book (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, start INTEGER, end INTEGER, content TEXT)");
-                await sqliteUtils.create(db, "CREATE TABLE IF NOT EXISTS book_list (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, words INTEGER, end INTEGER)");
+                db = sqlUtils.open();
+				await sqlUtils.initTable(db);
                 resolve();
             } catch (error) {
-                console.log(error);
-                sqliteUtils.close(db);
+                console.error(error);
+                sqlUtils.close(db);
                 reject(error);
             }
         })
@@ -200,7 +194,7 @@ const initTable = async () => {
 const fileReadLine = (fileName) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const filePath = path.join(__dirname, '../../fishBook/book', fileName);
+            const filePath = path.join(__dirname, '../../../fishBook/book', fileName);
             const rl = readline.createInterface({
                 input: fs.createReadStream(filePath),
                 output: process.stdout,

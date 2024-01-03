@@ -2,7 +2,7 @@ const { ipcMain, BrowserWindow, screen, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const readline = require('readline');
-const sqliteUtils = require('./sqlite3Util');
+const sqlUtils = require('../sqlite/sql.js');
 
 // 读取book数据
 const readFile = () => {
@@ -12,11 +12,11 @@ const readFile = () => {
             try {
                 var content = "";
                 var len = length;
-                db = sqliteUtils.open();
+                db = sqlUtils.open();
                 while (content.length < len) {
                     const sql = "select substr(content, (?-start)+1 ,?) as content,start, end from book where name=? and start <= ? ORDER BY id desc limit 1";
                     const params = [start, length, fileName, start];
-                    const data = await sqliteUtils.select(db, sql, params);
+                    const data = await sqlUtils.selectOne(db, sql, params);
                     content += data.content;
                     if (data.content.length < length) {
                         length = length - data.content.length;
@@ -25,10 +25,10 @@ const readFile = () => {
                     console.log(start, length);
                 }
 
-                sqliteUtils.close(db);
+                sqlUtils.close(db);
                 resolve(content)
             } catch (error) {
-                sqliteUtils.close(db);
+                sqlUtils.close(db);
                 console.log(error);
                 reject(error);
             }

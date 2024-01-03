@@ -1,7 +1,7 @@
 // 导入Electron模块
 const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
-const mainWinEvent = require('./src/common/mainWin');
+const mainWinEvent = require('./src/common/winEvent/mainWin');
 
 // 是否是生产环境
 const isPackaged = app.isPackaged;

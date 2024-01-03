@@ -72,11 +72,14 @@ const openBookDirectory = () => {
 // 同步书架数据
 const refreshBooks = async () => {
     loading.value = true;
-    console.log("refreshBooks");
+    console.log("1");
 
     try {
         await mainWinApi.refreshBooks();
+		
+		console.log("2");
         bookList.value = await mainWinApi.getBookInfoList();
+		console.log("3");
         console.log(bookList.value);
         ElNotification({
             offset: 100,

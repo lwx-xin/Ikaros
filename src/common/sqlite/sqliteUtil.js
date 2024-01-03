@@ -15,6 +15,52 @@ const close = (db) => {
     }
 }
 
+const execSql = (db, sql, params)=>{
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            db.run(sql, params, function (err) {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    });
+}
+
+const selectAll = (db, sql, params) => {
+    return new Promise((resolve, reject) => {
+        db.serialize(async () => {
+            db.all(sql, params, (err, row) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else {
+                    resolve(row);
+                };
+            });
+        });
+    });
+}
+
+const selectOne = (db, sql, params) => {
+    return new Promise((resolve, reject) => {
+        db.serialize(async () => {
+            db.get(sql, params, (err, row) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else {
+                    resolve(row);
+                };
+            });
+        });
+    });
+}
+
+/* 
 // 创建表
 const create = (db, sql) => {
     return new Promise((resolve, reject) => {
@@ -77,13 +123,16 @@ const select = (db, sql, params) => {
             });
         });
     });
-}
+} */
 
 module.exports = {
     open,
     close,
-    create,
-    insert,
-    select,
-    del
+    // create,
+    // insert,
+    // select,
+    // del
+	execSql,
+	selectAll,
+	selectOne
 };
