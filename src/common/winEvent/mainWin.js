@@ -1,4 +1,4 @@
-const { ipcMain, BrowserWindow, screen, shell } = require('electron');
+const { ipcMain, BrowserWindow, screen, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const fishBookWinEvent = require('../winEvent/fishBookWin.js');
@@ -52,7 +52,7 @@ const refreshBooks = () => {
             const files = fs.readdirSync(directoryPath);
             let db;
             try {
-                db = sqlUtils.open();
+                db = await sqlUtils.open();
 
                 for (const fileName of files) {
 
@@ -107,7 +107,7 @@ const getBookInfoList = () => {
         return new Promise(async (resolve, reject) => {
             let db;
             try {
-                db = sqlUtils.open();
+                db = await sqlUtils.open();
                 const bookInfoList = await sqlUtils.select(db, "book_list", null, null);
                 resolve(bookInfoList);
             } catch (error) {
@@ -174,23 +174,6 @@ const openFishBookWindow = (mainWin) => {
     });
 }
 
-const initTable = async () => {
-    ipcMain.handle('init-table', (event) => {
-        return new Promise(async (resolve, reject) => {
-            let db;
-            try {
-                db = sqlUtils.open();
-				await sqlUtils.initTable(db);
-                resolve();
-            } catch (error) {
-                console.error(error);
-                sqlUtils.close(db);
-                reject(error);
-            }
-        })
-    });
-}
-
 const fileReadLine = (fileName) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -223,5 +206,4 @@ module.exports = {
     openFishBookWindow,
     refreshBooks,
     getBookInfoList,
-    initTable,
 }

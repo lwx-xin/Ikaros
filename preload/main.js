@@ -32,10 +32,6 @@ const getBookInfoList = () => {
     return ipcRenderer.invoke("get-book-info-list");
 }
 
-const initTable = () => {
-    ipcRenderer.invoke("init-table");
-}
-
 contextBridge.exposeInMainWorld("mainWinApi", {
     moveWindow,
     resizeMinWindow,
@@ -45,5 +41,4 @@ contextBridge.exposeInMainWorld("mainWinApi", {
     openBookDirectory,
     refreshBooks,
     getBookInfoList,
-    initTable,
 });

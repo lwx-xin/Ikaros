@@ -76,7 +76,6 @@ const createMainWin = () => {
     mainWinEvent.resizeMaxWindow();
     mainWinEvent.closeWindow();
     mainWinEvent.openFishBookWindow(mainWin);
-    mainWinEvent.initTable();
 
     // fish-book
     mainWinEvent.openBookDirectory();
