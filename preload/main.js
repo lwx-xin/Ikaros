@@ -24,6 +24,10 @@ const openBookDirectory = (fileName) => {
     ipcRenderer.invoke("open-books-folder");
 }
 
+const uploadBook = () => {
+    return ipcRenderer.invoke("upload-book");
+}
+
 const refreshBooks = () => {
     return ipcRenderer.invoke("refresh-books");
 }
@@ -39,6 +43,7 @@ contextBridge.exposeInMainWorld("mainWinApi", {
     closeWindow,
     openFishBookWindow,
     openBookDirectory,
+	uploadBook,
     refreshBooks,
     getBookInfoList,
 });

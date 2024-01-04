@@ -105,7 +105,7 @@ const insertBatch = (db, table, dataArr, size) => {
 const del = (db, table, whereData)=>{
 	return new Promise(async(resolve, reject) => {
 		try{
-			if(db == null || whereData == null || table==null || table=="" || Object.keys(whereData).length == 0){
+			if(db == null || table==null || table==""){
 				reject("del 参数错误");
 			}
 			if(!checkTable(table)){
@@ -133,7 +133,7 @@ const del = (db, table, whereData)=>{
 				}
 			}
 			
-			const sql = "DELETE FROM "+table+" WHERE "+whereSql;
+			const sql = "DELETE FROM "+table+whereSql;
 			await sqliteUtils.execSql(db, sql, params);
 			resolve();
 		}catch(error){

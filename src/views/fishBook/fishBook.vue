@@ -1,26 +1,19 @@
 <template>
     <div class="fish-book" v-loading="loading">
         <el-row class="btn-list">
-            <el-popover placement="top-start" title="提示" width="400" trigger="click">
-                <template #reference>
-                    <el-button type="primary">
-                        上传小说
-                        <el-icon class="el-icon--right">
-                            <Upload />
-                        </el-icon>
-                    </el-button>
-                </template>
-                <div class="popover-content">
-                    您的书架对应您磁盘上的一个名为【book】的文件夹，如果您想要上传小说的话，点击下方蓝色按钮后，只需要把txt文件拖进文件夹，回到软件点击【同步书架】按钮即可。
-                    <el-divider></el-divider>
-                    <div style="text-align: center">
-                        <el-button type="primary" @click="openBookDirectory">
-                            打开书架本地文件夹
-                        </el-button>
-                    </div>
-                </div>
-            </el-popover>
-            <el-button type="primary" @click="refreshBooks">
+            <el-button type="primary" @click="uploadBook">
+                上传小说
+                <el-icon class="el-icon--right">
+                    <Upload />
+                </el-icon>
+            </el-button>
+            <el-button type="primary" @click="openBookDirectory" v-if="false">
+                打开书架目录
+                <el-icon class="el-icon--right">
+                    <Upload />
+                </el-icon>
+            </el-button>
+            <el-button type="primary" @click="refreshBooks" v-if="false">
                 同步书架
                 <el-icon>
                     <Refresh />
@@ -69,17 +62,42 @@ const openBookDirectory = () => {
     mainWinApi.openBookDirectory();
 }
 
+// 上传小说
+const uploadBook = async () => {
+    try{
+		loading.value = true;
+		// 复制文件到book目录下
+		const bookName = await mainWinApi.uploadBook();
+		if (bookName) {
+			// 将book目录下的文件同步更新到sqlite中
+			await mainWinApi.refreshBooks();
+			// 读取文件列表
+			bookList.value = await mainWinApi.getBookInfoList();
+			ElNotification({
+				offset: 100,
+				message: "文件【" + bookName + "】添加成功",
+				type: 'success',
+			});
+		}
+		loading.value = false;
+	}catch(error){
+		loading.value = false;
+		ElNotification({
+			offset: 100,
+			message: "上传失败",
+			type: 'error',
+		})
+	}
+}
+
 // 同步书架数据
 const refreshBooks = async () => {
     loading.value = true;
-    console.log("1");
 
     try {
         await mainWinApi.refreshBooks();
-		
-		console.log("2");
+
         bookList.value = await mainWinApi.getBookInfoList();
-		console.log("3");
         console.log(bookList.value);
         ElNotification({
             offset: 100,

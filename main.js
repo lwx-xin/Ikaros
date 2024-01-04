@@ -79,6 +79,7 @@ const createMainWin = () => {
 
     // fish-book
     mainWinEvent.openBookDirectory();
+	mainWinEvent.uploadBook();
     mainWinEvent.refreshBooks();
     mainWinEvent.getBookInfoList();
 };
