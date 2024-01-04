@@ -1,15 +1,6 @@
 <template>
     <div class="fish-book" @mousedown="startDrag">
         <div>{{ content }}</div>
-        <div class="win-close-btn" @click="addBook">
-            addBook
-        </div>
-        <div class="win-close-btn" @click="beforePage">
-            before
-        </div>
-        <div class="win-close-btn" @click="nextPage">
-            next
-        </div>
         <div class="win-close-btn" @click="handleClose">
             <el-icon>
                 <close />
@@ -20,9 +11,13 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute();
+console.log("route",route.params.bookId)
 
 onMounted(async () => {
-    await readFile();
+    //await readFile();
 })
 
 const handleClose = () => {

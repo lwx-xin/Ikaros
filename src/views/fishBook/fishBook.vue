@@ -22,7 +22,7 @@
         </el-row>
         <el-row class="book-list">
             <template v-for="book in bookList">
-                <el-card shadow="hover" class="book-card">
+                <el-card shadow="hover" class="book-card" @click="openBook(book.id)">
                     <template #header>
                         <div class="book-header">阅读中</div>
                     </template>
@@ -66,13 +66,11 @@ const openBookDirectory = () => {
 const uploadBook = async () => {
     try{
 		loading.value = true;
-		// 复制文件到book目录下
+		// 上传
 		const bookName = await mainWinApi.uploadBook();
+        bookList.value = await mainWinApi.getBookInfoList();
+		// 重新加载列表
 		if (bookName) {
-			// 将book目录下的文件同步更新到sqlite中
-			await mainWinApi.refreshBooks();
-			// 读取文件列表
-			bookList.value = await mainWinApi.getBookInfoList();
 			ElNotification({
 				offset: 100,
 				message: "文件【" + bookName + "】添加成功",
@@ -98,14 +96,12 @@ const refreshBooks = async () => {
         await mainWinApi.refreshBooks();
 
         bookList.value = await mainWinApi.getBookInfoList();
-        console.log(bookList.value);
         ElNotification({
             offset: 100,
             message: "同步成功",
             type: 'success',
         })
     } catch (error) {
-        console.log(error);
         ElNotification({
             offset: 100,
             message: "同步失败",
@@ -116,20 +112,17 @@ const refreshBooks = async () => {
 
 }
 
+// 加载书架信息
 const getBookInfoList = async () => {
-    console.log("getBookInfoList");
     loading.value = true;
-
     try {
         bookList.value = await mainWinApi.getBookInfoList();
-        console.log(bookList.value);
         ElNotification({
             offset: 100,
             message: "书架信息读取成功",
             type: 'success',
         })
     } catch (error) {
-        console.log(error);
         ElNotification({
             offset: 100,
             message: "书架信息读取失败",
@@ -137,6 +130,11 @@ const getBookInfoList = async () => {
         })
     }
     loading.value = false;
+}
+
+// 打开图书
+const openBook = (bookId)=>{
+	mainWinApi.openReadBookWindow(bookId);
 }
 </script>
 

@@ -1,9 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-const moveWindow = (x, y) => {
-    ipcRenderer.invoke("window-move", x, y);
-}
-
 const resizeMinWindow = () => {
     ipcRenderer.invoke("window-min");
 }
@@ -16,8 +12,8 @@ const closeWindow = () => {
     ipcRenderer.invoke("window-close");
 }
 
-const openFishBookWindow = () => {
-    ipcRenderer.invoke("window-open-fishBook");
+const openReadBookWindow = (bookId) => {
+    ipcRenderer.invoke("window-open-readBook", bookId);
 }
 
 const openBookDirectory = (fileName) => {
@@ -37,11 +33,10 @@ const getBookInfoList = () => {
 }
 
 contextBridge.exposeInMainWorld("mainWinApi", {
-    moveWindow,
     resizeMinWindow,
     resizeMaxWindow,
     closeWindow,
-    openFishBookWindow,
+    openReadBookWindow,
     openBookDirectory,
 	uploadBook,
     refreshBooks,

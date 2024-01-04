@@ -1,11 +1,11 @@
 const { ipcMain, BrowserWindow, screen, shell, dialog, app } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const fishBookWinEvent = require('../winEvent/fishBookWin.js');
+const readBookProcessEvent = require('./readBookProcessEvent.js');
 const sqlUtils = require('../sqlite/sql.js');
 const readline = require('readline');
-
-const fishBook_book_path = path.join(app.getAppPath(), '/public/module/fishBook/book');
+const { pathConfig, winConfig } = require('../config/sysConfig');
+const { v4: uuidv4 } = require('uuid');
 
 // 最小化
 const resizeMinWindow = () => {
@@ -39,9 +39,7 @@ const closeWindow = () => {
 const openBookDirectory = () => {
     ipcMain.handle('open-books-folder', (event) => {
         try {
-			// const directoryPath = path.join(__dirname, '../../../fishBook/book');
-            // shell.openPath(directoryPath);
-            shell.openPath(fishBook_book_path);
+            shell.openPath(pathConfig.fishBook_book_path);
         } catch (error) {
             console.error(error);
         }
@@ -63,21 +61,25 @@ const uploadBook = () => {
 				
 				if(filePathArr != null && filePathArr.length > 0){
 					const filePath = filePathArr[0];
-					// const directoryPath = path.join(__dirname, '../../../fishBook/book');
-					const directoryPath = fishBook_book_path;
 					fileName = path.basename(filePath);
-					const targetPath = path.join(directoryPath, fileName);
 					
-					fs.copyFile(filePath, targetPath, (error)=>{
-						if(error){
-							reject(error, fileName);
-						} else {
-							resolve(fileName);
-						}
-					});
-				} else {
-					resolve();
+					// 将文件读取到DB
+					await saveBookData(filePath);
+					
+					// 后缀名
+					const extname = path.extname(fileName);
+					// 不带后缀的文件名
+					const basename = path.basename(fileName, extname);
+					// 时间戳
+					const timestamp = new Date().getTime();
+					// 格式化后的文件名
+					let fileTargetName = basename+"_"+timestamp+extname;
+					
+					// 将上传的文件付备份到targetPath目录下
+					await fs.copyFileSync(filePath, path.join(pathConfig.fishBook_book_path, fileTargetName));
+					
 				}
+				resolve(fileName);
 			} catch (error) {
 				console.error(error);
 				reject(error, fileName);
@@ -90,58 +92,15 @@ const uploadBook = () => {
 const refreshBooks = () => {
     ipcMain.handle('refresh-books', (event) => {
         return new Promise(async (resolve, reject) => {
-            // const directoryPath = path.join(__dirname, '../../../fishBook/book');
-            const directoryPath = fishBook_book_path;
-            const files = fs.readdirSync(directoryPath);
-            let db;
+            const files = fs.readdirSync(pathConfig.fishBook_book_path);
             try {
-                db = await sqlUtils.open();
-
                 for (const fileName of files) {
-
-                    const bookCounts = await sqlUtils.selectOne(db, "SELECT count(1) as count from book_list WHERE name=?", [fileName]);
-                    if (bookCounts != null && bookCounts.count > 0) {
-                        // 图书已存在
-                        // continue;
-						
-						// 删除之前的旧数据
-						await sqlUtils.del(db, "book", null);
-						await sqlUtils.del(db, "book_list", null);
-                        console.log("图书" + fileName + "覆盖成功");
-                    }
-
-                    const bookLineData = await fileReadLine(fileName);
-					
-					let dataArr = [];
-					let start = 0;
-					let end = 0;
-                    for (let i = 0; i < bookLineData.length; i++) {
-						var bookLine = bookLineData[i];
-						
-						start = end+1;
-						end = start+bookLine.length-1;
-						
-						dataArr.push({
-							name: fileName, 
-							start: start, 
-							end: end, 
-							content: bookLine
-						});
-					}
-					await sqlUtils.insertBatch(db, "book", dataArr, 1000)
-					
-					await sqlUtils.insert(db, "book_list", {
-						name: fileName, 
-						words: end, 
-						end: 1
-					});
-
-                    console.log("图书" + fileName + "读取成功");
+					const bookPath = path.join(pathConfig.fishBook_book_path, fileName);
+					const bookId = await saveBookData(bookPath);
+                    console.log("图书" + fileName +"【"+bookId+"】"+ "同步成功");
                 }
-				sqlUtils.close(db);
 				resolve();
             } catch (error) {
-                sqlUtils.close(db);
                 console.log(error);
                 reject(error);
             }
@@ -166,20 +125,19 @@ const getBookInfoList = () => {
     });
 }
 
-const openFishBookWindow = (mainWin) => {
-    const winInfo = {
-        width: 800,
-        height: 600,
-    }
-    ipcMain.handle('window-open-fishBook', (event) => {
+const openReadBookWindow = () => {
+    ipcMain.handle('window-open-readBook', (event, bookId) => {
+        const webContent = event.sender;
+        const mainWin = BrowserWindow.fromWebContents(webContent);
+		
         mainWin.hide();
         // 获取屏幕尺寸
         // const { width } = screen.getPrimaryDisplay().workAreaSize;
 
         // 创建一个新的无边框窗口
         const win = new BrowserWindow({
-            width: winInfo.width,
-            height: winInfo.height,
+            ...winConfig.readBook,
+			
             // x: Math.floor((width - 800) / 2), // 窗口在 X 轴上的位置居中
             // y: 0, // 窗口在 Y 轴上的位置放置在屏幕底部
             frame: false,
@@ -191,7 +149,7 @@ const openFishBookWindow = (mainWin) => {
             modal: false,
             webPreferences: {
                 // 定义预加载的js
-                preload: path.resolve(__dirname, '../../preload/fishBook.js'),
+                preload: path.resolve(app.getAppPath(), 'preload/readBook.js'),
             },
         });
         win.setMaximumSize(1920, 1080);
@@ -203,7 +161,7 @@ const openFishBookWindow = (mainWin) => {
         // 将子窗口设置为主窗口的子窗口
         win.setParentWindow(mainWin);
 
-        win.loadURL('http://localhost:9999/fishBook');
+        win.loadURL('http://localhost:9999/readBook/'+bookId);
 
         // win.hookWindowMessage(278, function (e) {
         //     win.setEnabled(false); //窗口禁用
@@ -215,17 +173,20 @@ const openFishBookWindow = (mainWin) => {
         // global.readWindow = win;
 
         win.webContents.openDevTools();
-
-        fishBookWinEvent.readFile();
-        fishBookWinEvent.closeWindow();
+	
+		// 注册子窗口的事件
+		for (const [key, processEvent] of Object.entries(readBookProcessEvent)) {
+		  if(typeof processEvent == "function"){
+			  processEvent();
+		  }
+		}
     });
 }
 
-const fileReadLine = (fileName) => {
+// 按行读取文件
+const textFileReadLine = (filePath) => {
     return new Promise(async (resolve, reject) => {
         try {
-            // const filePath = path.join(__dirname, '../../../fishBook/book', fileName);
-            const filePath = path.join(fishBook_book_path, fileName);
             const rl = readline.createInterface({
                 input: fs.createReadStream(filePath),
                 output: process.stdout,
@@ -246,12 +207,58 @@ const fileReadLine = (fileName) => {
     });
 }
 
+const saveBookData = (bookPath) => {
+	return new Promise(async (resolve, reject) => {
+		let db;
+		try {
+			db = await sqlUtils.open();
+			// 生成book ID(唯一)
+			const bookId = uuidv4();
+			// 文件数据-按行读取
+			const bookLineArrData = await textFileReadLine(bookPath);
+			
+			const fileName = path.basename(bookPath);
+			
+			let dataArr = [];
+			let start = 0;
+			let end = 0;
+			for (let i = 0; i < bookLineArrData.length; i++) {
+				var bookLine = bookLineArrData[i];
+				
+				start = end+1;
+				end = start+bookLine.length-1;
+				
+				dataArr.push({
+					name: fileName, 
+					book_id: bookId,
+					start: start, 
+					end: end, 
+					content: bookLine
+				});
+			}
+			await sqlUtils.insertBatch(db, "book", dataArr, 1000)
+			
+			await sqlUtils.insert(db, "book_list", {
+				id: bookId,
+				name: fileName, 
+				words: end, 
+				end: 1
+			});
+			sqlUtils.close(db);
+			resolve(bookId);
+		} catch (error) {
+			sqlUtils.close(db);
+			reject(error);
+		}
+	});
+}
+
 module.exports = {
     resizeMinWindow,
     resizeMaxWindow,
     closeWindow,
     openBookDirectory,
-    openFishBookWindow,
+    openReadBookWindow,
 	uploadBook,
     refreshBooks,
     getBookInfoList,

@@ -7,6 +7,7 @@ import ShortcutKeys from '@/views/ShortcutKeys.vue'
 import Settings from '@/views/Settings.vue'
 
 import FishBook from '@/views/fishBook/fishBook.vue'
+import ReadBook from '@/views/fishBook/readBook.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,6 +47,12 @@ const router = createRouter({
                 },
             ]
         },
+		{
+			// readBook
+			path: '/readBook/:bookId',
+			name: 'readBook',
+			component: ReadBook
+		}
     ]
 })
 

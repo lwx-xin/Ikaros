@@ -1,21 +1,18 @@
 // 导入Electron模块
 const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
-const mainWinEvent = require('./src/common/winEvent/mainWin');
+const mainProcessEvent = require('./src/common/processEvent/mainProcessEvent.js');
+
+const { winConfig } = require('./src/common/config/sysConfig');
 
 // 是否是生产环境
 const isPackaged = app.isPackaged;
 
 let mainWin;
-const mainWinInfo = {
-    width: 1000,
-    height: 600
-}
 
 const createMainWin = () => {
     mainWin = new BrowserWindow({
-        width: mainWinInfo.width,
-        height: mainWinInfo.height,
+        ...winConfig.main,
 
         show: false,
         frame: false,
@@ -33,7 +30,7 @@ const createMainWin = () => {
     // mainWin.setMenu(null);
 
     mainWin.on('ready-to-show', () => {
-        mainWin.show();
+        // mainWin.show();
     });
 
     // 开发环境下，打开开发者工具。
@@ -71,17 +68,13 @@ const createMainWin = () => {
     tray.on('click', () => {
         mainWin.show();
     });
-
-    mainWinEvent.resizeMinWindow();
-    mainWinEvent.resizeMaxWindow();
-    mainWinEvent.closeWindow();
-    mainWinEvent.openFishBookWindow(mainWin);
-
-    // fish-book
-    mainWinEvent.openBookDirectory();
-	mainWinEvent.uploadBook();
-    mainWinEvent.refreshBooks();
-    mainWinEvent.getBookInfoList();
+	
+	// 注册主主窗口的事件
+	for (const [key, processEvent] of Object.entries(mainProcessEvent)) {
+	  if(typeof processEvent == "function"){
+		  processEvent();
+	  }
+	}
 };
 
 // 在应用准备就绪时调用函数

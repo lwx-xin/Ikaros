@@ -1,8 +1,8 @@
 const sqliteUtils = require('./sqliteUtil');
 
 const tableInfo = {
-	book: "CREATE TABLE IF NOT EXISTS book (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, start INTEGER, end INTEGER, content TEXT)",
-	book_list: "CREATE TABLE IF NOT EXISTS book_list (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, words INTEGER, end INTEGER)"
+	book: "CREATE TABLE IF NOT EXISTS book (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, book_id TEXT, start INTEGER, end INTEGER, content TEXT)",
+	book_list: "CREATE TABLE IF NOT EXISTS book_list (id TEXT, name TEXT, words INTEGER, end INTEGER)"
 }
 
 const checkTable = (table)=>{
