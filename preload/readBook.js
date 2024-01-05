@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-const readFile = async (fileName, start, length) => {
-    const data = await ipcRenderer.invoke("read-file", fileName, start, length);
+const readFile = async (bookId, wordsPerPage, beforeOrNext) => {
+    const data = await ipcRenderer.invoke("read-file", bookId, wordsPerPage, beforeOrNext);
     return data;
 }
 

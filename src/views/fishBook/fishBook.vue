@@ -64,28 +64,28 @@ const openBookDirectory = () => {
 
 // 上传小说
 const uploadBook = async () => {
-    try{
-		loading.value = true;
-		// 上传
-		const bookName = await mainWinApi.uploadBook();
+    try {
+        loading.value = true;
+        // 上传
+        const bookName = await mainWinApi.uploadBook();
         bookList.value = await mainWinApi.getBookInfoList();
-		// 重新加载列表
-		if (bookName) {
-			ElNotification({
-				offset: 100,
-				message: "文件【" + bookName + "】添加成功",
-				type: 'success',
-			});
-		}
-		loading.value = false;
-	}catch(error){
-		loading.value = false;
-		ElNotification({
-			offset: 100,
-			message: "上传失败",
-			type: 'error',
-		})
-	}
+        // 重新加载列表
+        if (bookName) {
+            ElNotification({
+                offset: 100,
+                message: "文件【" + bookName + "】添加成功",
+                type: 'success',
+            });
+        }
+        loading.value = false;
+    } catch (error) {
+        loading.value = false;
+        ElNotification({
+            offset: 100,
+            message: "上传失败",
+            type: 'error',
+        })
+    }
 }
 
 // 同步书架数据
@@ -133,8 +133,8 @@ const getBookInfoList = async () => {
 }
 
 // 打开图书
-const openBook = (bookId)=>{
-	mainWinApi.openReadBookWindow(bookId);
+const openBook = (bookId) => {
+    mainWinApi.openReadBookWindow(bookId);
 }
 </script>
 

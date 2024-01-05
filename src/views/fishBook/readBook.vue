@@ -6,6 +6,12 @@
                 <close />
             </el-icon>
         </div>
+        <div class="win-close-btn" @click="beforePage">
+            pre
+        </div>
+        <div class="win-close-btn" @click="nextPage">
+            next
+        </div>
     </div>addBook
 </template>
 
@@ -14,39 +20,34 @@ import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute();
-console.log("route",route.params.bookId)
+const bookId = ref(route.params.bookId);
+let wordsPerPage = ref(10);
 
 onMounted(async () => {
-    //await readFile();
+	await getBookSettingInfo();
+    await readFile(bookId, wordsPerPage, "");
 })
+
+const getBookSettingInfo = async () => {
+	wordsPerPage = ref(10);
+}
 
 const handleClose = () => {
     fishBookWinApi.closeWindow();
 }
 
 const content = ref('');
-const start = ref(1);
-const length = ref(100);
 
-const readFile = async () => {
-    console.log('readFile');
-    const data = await fishBookWinApi.readFile('变废为宝：开局捡到假死美杜莎.txt', start.value, length.value);
+const readFile = async (bookId, wordsPerPage, type) => {
+    const data = await fishBookWinApi.readFile(bookId.value, wordsPerPage.value, type);
     content.value = data;
 }
 
 const nextPage = async () => {
-    start.value += length.value;
-    await readFile();
+    await readFile(bookId, wordsPerPage, "next");
 }
 const beforePage = async () => {
-    if (start.value > 1) {
-        start.value -= length.value;
-        await readFile();
-    }
-}
-
-const addBook = async () => {
-    await fishBookWinApi.addBook('变废为宝：开局捡到假死美杜莎.txt');
+    await readFile(bookId, wordsPerPage, "before");
 }
 </script>
 
