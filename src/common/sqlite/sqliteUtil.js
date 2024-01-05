@@ -15,7 +15,7 @@ const close = (db) => {
     }
 }
 
-const execSql = (db, sql, params)=>{
+const execSql = (db, sql, params) => {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
             db.run(sql, params, function (err) {
@@ -60,71 +60,6 @@ const selectOne = (db, sql, params) => {
     });
 }
 
-/* 
-// 创建表
-const create = (db, sql) => {
-    return new Promise((resolve, reject) => {
-        db.serialize(() => {
-            db.run(sql, [], function (err) {
-                if (err) {
-                    console.error(err);
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    });
-}
-
-// 插入数据
-const insert = (db, sql, params) => {
-    return new Promise((resolve, reject) => {
-        db.serialize(() => {
-            db.run(sql, params, function (err) {
-                if (err) {
-                    console.error(err);
-                    reject(err);
-                } else {
-                    resolve({ id: this.lastID });
-                }
-            });
-        });
-    });
-};
-
-// 删除数据
-const del = (db, sql, params) => {
-    return new Promise((resolve, reject) => {
-        db.serialize(() => {
-            db.run(sql, params, function (err) {
-                if (err) {
-                    console.error(err);
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    });
-}
-
-// 查询数据
-const select = (db, sql, params) => {
-    return new Promise((resolve, reject) => {
-        db.serialize(async () => {
-            db.all(sql, params, (err, row) => {
-                if (err) {
-                    console.error(err);
-                    reject(err);
-                } else {
-                    resolve(row);
-                };
-            });
-        });
-    });
-} */
-
 module.exports = {
     open,
     close,
@@ -132,7 +67,7 @@ module.exports = {
     // insert,
     // select,
     // del
-	execSql,
-	selectAll,
-	selectOne
+    execSql,
+    selectAll,
+    selectOne
 };

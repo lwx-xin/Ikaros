@@ -24,12 +24,12 @@ const bookId = ref(route.params.bookId);
 let wordsPerPage = ref(10);
 
 onMounted(async () => {
-	await getBookSettingInfo();
+    await getBookSettingInfo();
     await readFile(bookId, wordsPerPage, "");
 })
 
 const getBookSettingInfo = async () => {
-	wordsPerPage = ref(10);
+    wordsPerPage = ref(10);
 }
 
 const handleClose = () => {

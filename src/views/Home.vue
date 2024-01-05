@@ -8,6 +8,9 @@
                 <el-card shadow="hover" @click="ldCompare">LD-Compare</el-card>
             </el-col>
             <el-col :span="8">
+                <el-card shadow="hover" @click="game">GAME</el-card>
+            </el-col>
+            <el-col :span="8">
                 <el-card shadow="hover">Other</el-card>
             </el-col>
         </el-row>
@@ -15,7 +18,7 @@
 </template>
 
 <script setup>
-import { useRouter,useRoute } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useIkarosStore } from "@/store/index.js"
 import { onMounted } from 'vue'
 
@@ -30,14 +33,21 @@ onMounted(() => {
 })
 
 const fishBook = () => {
-    // mainWinApi.openFishBookWindow();
     router.push({
         path: '/main/fishBook'
     })
 }
+
 const ldCompare = () => {
-    // ipcRenderer.send('window-open-fishBook');
+
 }
+
+const game = () => {
+    router.push({
+        path: '/game'
+    })
+}
+
 </script>
 
 <style scoped></style>

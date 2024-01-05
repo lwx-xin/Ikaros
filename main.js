@@ -68,13 +68,14 @@ const createMainWin = () => {
     tray.on('click', () => {
         mainWin.show();
     });
-	
-	// 注册主主窗口的事件
-	for (const [key, processEvent] of Object.entries(mainProcessEvent)) {
-	  if(typeof processEvent == "function"){
-		  processEvent();
-	  }
-	}
+
+    // 注册主主窗口的事件
+    for (const [key, processEvent] of Object.entries(mainProcessEvent)) {
+        if (typeof processEvent == "function") {
+            processEvent();
+        }
+    }
+
 };
 
 // 在应用准备就绪时调用函数

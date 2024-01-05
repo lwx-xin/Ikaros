@@ -7,13 +7,13 @@
                     <Upload />
                 </el-icon>
             </el-button>
-            <el-button type="primary" @click="openBookDirectory" v-if="false">
+            <el-button type="primary" @click="openBookDirectory" v-if="true">
                 打开书架目录
                 <el-icon class="el-icon--right">
                     <Upload />
                 </el-icon>
             </el-button>
-            <el-button type="primary" @click="refreshBooks" v-if="false">
+            <el-button type="primary" @click="refreshBooks" v-if="true">
                 同步书架
                 <el-icon>
                     <Refresh />

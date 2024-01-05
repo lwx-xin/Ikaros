@@ -5,17 +5,23 @@
                 IK
             </span>
             <span v-show="!ikarosStore.isMainPage">
-                <el-icon><Back /></el-icon>
+                <el-icon>
+                    <Back />
+                </el-icon>
             </span>
         </template>
         <template #title><span></span></template>
         <template #content>{{ ikarosStore.pageTitle }}</template>
         <template #extra>
             <span class="min-win" @click="handleMinimize">
-                <el-icon><Minus /></el-icon>
+                <el-icon>
+                    <Minus />
+                </el-icon>
             </span>
             <span class="close-win" @click="handleClose">
-                <el-icon><CloseBold /></el-icon>
+                <el-icon>
+                    <CloseBold />
+                </el-icon>
             </span>
         </template>
     </el-page-header>
@@ -45,6 +51,7 @@ const handleClose = () => {
     display: inline-block;
     padding: 0px 10px;
 }
+
 .close-win {
     -webkit-app-region: no-drag;
     display: inline-block;

@@ -9,6 +9,8 @@ import Settings from '@/views/Settings.vue'
 import FishBook from '@/views/fishBook/fishBook.vue'
 import ReadBook from '@/views/fishBook/readBook.vue'
 
+import GameHome from '@/views/game/index.vue'
+
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
@@ -47,12 +49,18 @@ const router = createRouter({
                 },
             ]
         },
-		{
-			// readBook
-			path: '/readBook/:bookId',
-			name: 'readBook',
-			component: ReadBook
-		}
+        {
+            // readBook
+            path: '/readBook/:bookId',
+            name: 'readBook',
+            component: ReadBook
+        },
+        {
+            // game首頁
+            path: '/game',
+            name: 'game',
+            component: GameHome
+        },
     ]
 })
 

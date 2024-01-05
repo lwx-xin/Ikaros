@@ -10,12 +10,12 @@ const readFile = () => {
 		return new Promise(async (resolve, reject) => {
 			let db;
 			try {
-				console.log("---------------------------");
 				let content = "";
 				db = await sqlUtils.open();
 
 				// 查询当前图书读取进度
-				const bookInfo = await sqlUtils.selectOne(db, "SELECT * FROM book_list WHERE id=?", [bookId]);
+				const bookInfo = await sqlUtils.selectByKey(db, "book_list", [], "id", bookId);
+
 				if (bookInfo == null || Object.keys(bookInfo).length == 0) {
 					reject("【" + bookId + "】不存在");
 				}
@@ -36,7 +36,6 @@ const readFile = () => {
 					while (content.length < wordsPerPage) {
 						const sql = "select substr(content, (?-start)+1 ,?) as content,start, end from book where book_id=? and start <= ? ORDER BY id desc limit 1";
 						const params = [start, length, bookId, start];
-						console.log(sql, params)
 
 						const data = await sqlUtils.selectOne(db, sql, params);
 						content += data.content;
