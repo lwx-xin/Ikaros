@@ -12,6 +12,14 @@ const openWsServer = (port) => {
     return ipcRenderer.invoke("open-server-ws", port);
 }
 
+const sendWsMessage = (userId, targetUserIds, message, msgType) => {
+    return ipcRenderer.invoke("send-message-ws", userId, targetUserIds, message, msgType);
+}
+
+const getLocalIp = () => {
+    return ipcRenderer.invoke("get-local-ip");
+}
+
 const resizeMinWindow = () => {
     ipcRenderer.invoke("window-min");
 }
@@ -73,4 +81,7 @@ contextBridge.exposeInMainWorld("mainWinApi", {
     sendHttpMessage,
 
     openWsServer,
+    sendWsMessage,
+
+    getLocalIp,
 });

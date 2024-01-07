@@ -6,9 +6,10 @@ const sqlUtils = require('../sqlite/sql.js');
 const readline = require('readline');
 const { winConfig, moduleSettings } = require('../config/sysConfig');
 const { v4: uuidv4 } = require('uuid');
+const os = require('os');
 
 const { openServer_http, sendMessage_http } = require('../httpServer.js');
-const WebSocket = require('ws');
+const { openServer_ws, sendMessage_ws } = require('../websocket.js');
 
 
 // 开启http服务
@@ -25,38 +26,34 @@ const sendHttpMessage = () => {
     });
 }
 
-let wsArr = {};
+// 开启websocket服务端
 const openWsServer = () => {
     ipcMain.handle('open-server-ws', (event, port) => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const wss = new WebSocket.Server({ port: port });
+        return openServer_ws(port);
+    });
+}
 
-                wss.on('listening', () => {
-                    // 服务开启成功
-                    console.log("服务开启成功");
-                    resolve();
-                });
+// 向websocket服务端发出消息，直接给接收者发送消息
+const sendWsMessage = () => {
+    ipcMain.handle('send-message-ws', (event, userId, targetUserIds, message, msgType) => {
+        return sendMessage_ws(userId, targetUserIds, message, msgType);
+    });
+}
 
-                wss.on('error', (error) => {
-                    console.error('WebSocket 服务器启动失败', error);
-                    reject(error)
-                });
-
-                wss.on('connection', function connection(ws) {
-                    // 客户端连接成功时触发
-                    console.log("有新的客户端接入");
-
-                    ws.on('message', function incoming(message) {
-                        wsArr[message] = ws;
-                        ws.send(message + "接入成功");
-                        console.log(Object.keys(wsArr));
-                    });
-                });
-            } catch (error) {
-                reject(error)
+// 获取本机的局域网IP
+const getLocalIp = () => {
+    ipcMain.handle('get-local-ip', (event) => {
+        let interfaces = os.networkInterfaces();
+        for (let devName in interfaces) {
+            let iface = interfaces[devName];
+            for (let i = 0; i < iface.length; i++) {
+                let alias = iface[i];
+                if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
+                    return alias.address;
+                }
             }
-        });
+        }
+        return null;
     });
 }
 
@@ -444,4 +441,7 @@ module.exports = {
     sendHttpMessage,
 
     openWsServer,
+    sendWsMessage,
+
+    getLocalIp,
 }

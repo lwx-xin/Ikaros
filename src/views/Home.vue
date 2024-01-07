@@ -1,18 +1,10 @@
 <template>
     <div class="home">
-        <el-row :gutter="12">
-            <el-col :span="8">
-                <el-card shadow="hover" @click="fishBook">Fish-Book</el-card>
-            </el-col>
-            <el-col :span="8">
-                <el-card shadow="hover" @click="ldCompare">LD-Compare</el-card>
-            </el-col>
-            <el-col :span="8">
-                <el-card shadow="hover" @click="game">GAME</el-card>
-            </el-col>
-            <el-col :span="8">
-                <el-card shadow="hover">Other</el-card>
-            </el-col>
+        <el-row>
+            <el-card shadow="hover" @click="fishBook">Fish-Book</el-card>
+            <el-card shadow="hover" @click="ldCompare">LD-Compare</el-card>
+            <el-card shadow="hover" @click="game">Game</el-card>
+            <el-card shadow="hover" @click="chat">Chat</el-card>
         </el-row>
     </div>
 </template>
@@ -48,6 +40,18 @@ const game = () => {
     })
 }
 
+const chat = () => {
+    router.push({
+        path: '/chat'
+    })
+}
+
 </script>
 
-<style scoped></style>
+<style scoped>
+.home>>>.el-card{
+    width: 150px;
+    margin: 10px;
+    text-align: center;
+}
+</style>

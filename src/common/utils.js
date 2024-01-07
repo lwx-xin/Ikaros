@@ -15,6 +15,25 @@ const percentage = (data, decimalPlaces) => {
     return new Intl.NumberFormat("zh-CN", options).format(num);
 }
 
+const isNull = (data) => {
+    if (
+        data == null
+        || data == undefined
+        || data == ''
+        || JSON.stringify(data) == '{}'
+        || JSON.stringify(data) == '[]'
+    ) {
+        return true;
+    }
+    return false;
+}
+
+const isNotNull = (data) => {
+    return !isNull(data);
+}
+
 export {
-    percentage
+    percentage,
+    isNull,
+    isNotNull
 }
