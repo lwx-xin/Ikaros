@@ -15,7 +15,7 @@ const winConfig = {
 
 const moduleSettings = {
 	// fishBook相关设置项
-	fishBookSettings: {
+	fishBook: {
 		// 小说每页字数
 		wordsPerPage: 40,
 		// 小说字体颜色

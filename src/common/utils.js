@@ -32,8 +32,16 @@ const isNotNull = (data) => {
     return !isNull(data);
 }
 
+const toNumber = (data) => {
+    if(isNull(data)){
+		return 0;
+	}
+	return Number(data);
+}
+
 export {
     percentage,
     isNull,
-    isNotNull
+    isNotNull,
+	toNumber
 }

@@ -4,15 +4,22 @@ import Main from '@/views/main/index.vue'
 
 import Home from '@/views/Home.vue'
 import ShortcutKeys from '@/views/ShortcutKeys.vue'
-import Settings from '@/views/Settings.vue'
 
+// 设置模块
+import Settings from '@/views/settings/Settings.vue'
+import Settings_System from '@/views/settings/System.vue'
+import Settings_FishBook from '@/views/settings/FishBook.vue'
+
+// FishBook模块
 import FishBook from '@/views/fishBook/fishBook.vue'
 import ReadBook from '@/views/fishBook/readBook.vue'
 
-import GameHome from '@/views/game/index.vue'
+// 游戏模块
+import Game from '@/views/game/index.vue'
 import Snake from '@/views/game/snake.vue'
 import Gobang from '@/views/game/gobang.vue'
 
+// 聊天模块
 import Chat from '@/views/chat/index.vue'
 
 const router = createRouter({
@@ -43,7 +50,19 @@ const router = createRouter({
                     // 设置
                     path: 'settings',
                     name: 'settings',
-                    component: Settings
+                    component: Settings,
+					children: [
+						{
+							path: 'system',
+							name: 'settings_system',
+							component: Settings_System
+						},
+						{
+							path: 'fishBook',
+							name: 'settings_fishBook',
+							component: Settings_FishBook
+						}
+					]
                 },
                 {
                     // fish-book首頁
@@ -69,7 +88,7 @@ const router = createRouter({
             // game首頁
             path: '/game',
             name: 'game',
-            component: GameHome,
+            component: Game,
             children: [
                 {
                     // 贪吃蛇

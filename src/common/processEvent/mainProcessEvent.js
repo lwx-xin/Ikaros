@@ -89,7 +89,7 @@ const closeWindow = () => {
 const openBookDirectory = () => {
     ipcMain.handle('open-books-folder', async (event) => {
         try {
-            const fishBook_book_path = await getSettingConfig("fishBookSettings@bookPath");
+            const fishBook_book_path = await getSettingConfig("fishBook", "bookPath");
             shell.openPath(fishBook_book_path);
         } catch (error) {
             console.error(error);
@@ -127,7 +127,7 @@ const uploadBook = () => {
                     let fileTargetName = basename + "_" + timestamp + extname;
 
                     // 将上传的文件付备份到targetPath目录下
-                    const fishBook_book_path = await getSettingConfig("fishBookSettings@bookPath");
+                    const fishBook_book_path = await getSettingConfig("fishBook", "bookPath");
                     await fs.copyFileSync(filePath, path.join(fishBook_book_path, fileTargetName));
 
                 }
@@ -144,7 +144,7 @@ const uploadBook = () => {
 const refreshBooks = () => {
     ipcMain.handle('refresh-books', (event) => {
         return new Promise(async (resolve, reject) => {
-            const fishBook_book_path = await getSettingConfig("fishBookSettings@bookPath");
+            const fishBook_book_path = await getSettingConfig("fishBook", "bookPath");
             const files = fs.readdirSync(fishBook_book_path);
             try {
                 for (const fileName of files) {
@@ -185,12 +185,15 @@ const initSettings = () => {
         return new Promise(async (resolve, reject) => {
             let db;
             try {
-                let allConfig = {};
-                const words = "@";
+                let allConfig = [];
 
                 for (const [module, settings] of Object.entries(moduleSettings)) {
                     for (const [setKey, setVal] of Object.entries(settings)) {
-                        allConfig[module + words + setKey] = setVal;
+                        allConfig.push({
+							module: module,
+							key: setKey,
+							value: setVal,
+						});
                     }
                 }
 
@@ -201,16 +204,14 @@ const initSettings = () => {
                 }
 
                 let configData = [];
-                for (const [k, v] of Object.entries(allConfig)) {
-                    const data = await sqlUtils.selectByKey(db, "settings", ["count(1) as count"], "set_key", k);
-
-                    if (data.count == 0) {
-                        configData.push({
-                            set_key: k,
-                            set_val: v
-                        });
-                    }
-                }
+				for(let i=0;i<allConfig.length;i++){
+					const config = allConfig[i];
+                    const data = await sqlUtils.selectOne(db, "SELECT count(1) as count FROM settings WHERE module=? and key=?", [config.module, config.key]);
+					
+					if(data ==null || data.count == 0){
+                        configData.push(config);
+					}
+				}
 
                 if (configData.length > 0) {
                     await sqlUtils.insertBatch(db, "settings", configData, 100);
@@ -228,17 +229,31 @@ const initSettings = () => {
 }
 
 const getSettings = () => {
-    ipcMain.handle('get-settings', (event, setKey) => {
+    ipcMain.handle('get-settings', (event, module, key) => {
         return new Promise(async (resolve, reject) => {
             let db;
             try {
                 db = await sqlUtils.open();
 
-                let whereData = {};
-                if (setKey != null && setKey != "") {
-                    whereData = { set_key: setKey };
-                }
-                const datas = await sqlUtils.select(db, "settings", [], whereData);
+                let whereSql = "";
+				let params = [];
+				if(module != null && module != ""){
+					if(whereSql==""){
+						whereSql += " WHERE ";
+					}
+					whereSql += "module=?";
+					params.push(module);
+				}
+				if(key != null && key != ""){
+					if(whereSql==""){
+						whereSql += " WHERE ";
+					}
+					whereSql += "key=?";
+					params.push(key);
+				}
+				
+				let sql = "SELECT * FROM settings" + whereSql;
+                const datas = await sqlUtils.selectAll(db, sql, params);
 
                 sqlUtils.close(db);
                 resolve(datas);
@@ -252,16 +267,17 @@ const getSettings = () => {
 }
 
 const setSettings = () => {
-    ipcMain.handle('set-settings', (event, setKey, setVal) => {
+    ipcMain.handle('set-settings', (event, module, key, value) => {
         return new Promise(async (resolve, reject) => {
             let db;
             try {
                 db = await sqlUtils.open();
 
                 await sqlUtils.update(db, "settings", {
-                    set_val: setVal
+                    value: value
                 }, {
-                    set_key: setKey
+					module: module,
+                    key: key
                 });
 
                 sqlUtils.close(db);
@@ -410,14 +426,14 @@ const saveBookData = (bookPath) => {
     });
 }
 
-const getSettingConfig = async (setKey) => {
+const getSettingConfig = async (module, key) => {
     let db;
     try {
         db = await sqlUtils.open();
 
-        const data = await sqlUtils.selectByKey(db, "settings", [], "set_key", setKey);
+		const data = await sqlUtils.selectOne(db, "SELECT * FROM settings WHERE module=? and key=?", [module, key]);
         sqlUtils.close(db);
-        return data.set_val;
+        return data==null?null:data.value;
     } catch (error) {
         console.log(error);
         sqlUtils.close(db);

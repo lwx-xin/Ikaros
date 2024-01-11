@@ -52,12 +52,12 @@ const getBookInfoList = () => {
     return ipcRenderer.invoke("get-book-info-list");
 }
 
-const getSettings = (setKey) => {
-    return ipcRenderer.invoke('get-settings', setKey);
+const getSettings = (module, key) => {
+    return ipcRenderer.invoke('get-settings', module, key);
 }
 
-const setSettings = (setKey, setVal) => {
-    return ipcRenderer.invoke('set-settings', setKey, setVal);
+const setSettings = (module, key, value) => {
+    return ipcRenderer.invoke('set-settings', module, key, value);
 }
 
 const initSettings = (isInit) => {
