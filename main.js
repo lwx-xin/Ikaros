@@ -38,7 +38,11 @@ const createMainWin = () => {
     mainWin.webContents.openDevTools();
     // }
 
-    mainWin.loadURL('http://localhost:9999/');
+	if(isPackaged){
+		mainWin.loadURL(`file://${path.join(__dirname, 'index.html')}`);
+	} else {
+		mainWin.loadURL('http://localhost:9999/');
+	}
 
     // 创建一个系统托盘图标
     const tray = new Tray(path.join(__dirname, './public/images/logo.png'));
