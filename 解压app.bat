@@ -1,0 +1,1 @@
+asar extract ./dist_electron/win-unpacked/resources/app.asar ./dist_electron/win-unpacked/resources/app

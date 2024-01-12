@@ -39,7 +39,7 @@ const createMainWin = () => {
     // }
 
 	if(isPackaged){
-		mainWin.loadURL(`file://${path.join(__dirname, 'index.html')}`);
+		mainWin.loadURL(`file://${path.join(__dirname, './dist/index.html')}`);
 	} else {
 		mainWin.loadURL('http://localhost:9999/');
 	}

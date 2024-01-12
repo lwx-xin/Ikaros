@@ -11,7 +11,7 @@
 		"preview": "vite preview",
 		"start": "nodemon --exec electron . --watch ./ --ext .js,.html,.css,scss,.vue",
 		"electron:dev": "concurrently \"npm run dev\" \"npm run start\"",
-		"electron:build": "electron-builder"
+		"electron:build": "vite build && electron-builder"
 	},
 	"dependencies": {
 		"@electron/remote": "^2.1.1",
@@ -37,8 +37,11 @@
 		"vite": "^5.0.10"
 	},
 	"build": {
-		"appId": "com.maizesoft.ikaros",
+		"appId": "com.app.ikaros",
 		"productName": "ikaros",
+		"directories": {
+			"output": "dist_electron"
+		},
 		"win": {
 			"icon": "public/ikaros.ico"
 		},
@@ -48,6 +51,14 @@
 		},
 		"buildDependenciesFromSource": true,
 		"nodeGypRebuild": false,
-		"npmRebuild": false
+		"npmRebuild": false,
+		"files": [
+			"public/**",
+			"preload/*",
+			"dist/",
+			"src/**",
+			"package.json",
+			"main.js"
+		]
 	}
 }
