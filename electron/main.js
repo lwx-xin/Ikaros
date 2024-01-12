@@ -1,12 +1,9 @@
 // 导入Electron模块
 const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
-const mainProcessEvent = require('./src/common/processEvent/mainProcessEvent.js');
+const mainProcessEvent = require('../src/common/processEvent/mainProcessEvent.js');
 
-const { winConfig } = require('./src/common/config/sysConfig');
-
-// 是否是生产环境
-const isPackaged = app.isPackaged;
+const { winConfig } = require('../src/common/config/sysConfig.js');
 
 let mainWin;
 
@@ -18,11 +15,11 @@ const createMainWin = () => {
         frame: false,
 
         // 窗口图标。 在 Windows 上推荐使用 ICO 图标来获得最佳的视觉效果, 默认使用可执行文件的图标.
-        icon: path.resolve(__dirname, './public/images/logo.png'),
+        icon: path.resolve(__dirname, '../public/images/logo.png'),
 
         webPreferences: {
             // 定义预加载的js
-            preload: path.resolve(__dirname, './preload/main.js'),
+            preload: path.resolve(__dirname, 'mainPreload.js'),
         },
 
     });
@@ -38,14 +35,15 @@ const createMainWin = () => {
     mainWin.webContents.openDevTools();
     // }
 
-	if(isPackaged){
-		mainWin.loadURL(`file://${path.join(__dirname, './dist/index.html')}`);
-	} else {
-		mainWin.loadURL('http://localhost:9999/');
-	}
+    // 加载 index.html
+    mainWin.loadURL(
+        app.isPackaged
+            ? `file://${path.join(__dirname, '../dist/index.html')}`
+            : 'http://localhost:9999'
+    );
 
     // 创建一个系统托盘图标
-    const tray = new Tray(path.join(__dirname, './public/images/logo.png'));
+    const tray = new Tray(path.join(__dirname, '../public/images/logo.png'));
 
     // 鼠标悬浮在图标上显示的提示
     tray.setToolTip('mini-ikaros');
@@ -53,14 +51,14 @@ const createMainWin = () => {
     const contextMenu = Menu.buildFromTemplate([
         {
             label: '打开主界面',
-            icon: path.join(__dirname, './public/images/app.png'),
+            icon: path.join(__dirname, '../public/images/app.png'),
             click: () => {
                 mainWin.show();
             },
         },
         {
             label: '退出',
-            icon: path.join(__dirname, './public/images/quit.png'),
+            icon: path.join(__dirname, '../public/images/quit.png'),
             click: function () {
                 app.quit();
             },

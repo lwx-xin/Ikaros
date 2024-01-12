@@ -17,7 +17,10 @@ import { onMounted } from 'vue'
 const router = useRouter()
 const ikarosStore = useIkarosStore()
 
-onMounted(() => {
+onMounted(async () => {
+	// 初始化settings
+	await mainWinApi.initSettings(false);
+
     ikarosStore.$patch((state) => {
         state.isMainPage = true;
         state.pageTitle = "";

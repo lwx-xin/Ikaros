@@ -190,10 +190,10 @@ const initSettings = () => {
                 for (const [module, settings] of Object.entries(moduleSettings)) {
                     for (const [setKey, setVal] of Object.entries(settings)) {
                         allConfig.push({
-							module: module,
-							key: setKey,
-							value: setVal,
-						});
+                            module: module,
+                            key: setKey,
+                            value: setVal,
+                        });
                     }
                 }
 
@@ -204,14 +204,14 @@ const initSettings = () => {
                 }
 
                 let configData = [];
-				for(let i=0;i<allConfig.length;i++){
-					const config = allConfig[i];
+                for (let i = 0; i < allConfig.length; i++) {
+                    const config = allConfig[i];
                     const data = await sqlUtils.selectOne(db, "SELECT count(1) as count FROM settings WHERE module=? and key=?", [config.module, config.key]);
-					
-					if(data ==null || data.count == 0){
+
+                    if (data == null || data.count == 0) {
                         configData.push(config);
-					}
-				}
+                    }
+                }
 
                 if (configData.length > 0) {
                     await sqlUtils.insertBatch(db, "settings", configData, 100);
@@ -236,23 +236,23 @@ const getSettings = () => {
                 db = await sqlUtils.open();
 
                 let whereSql = "";
-				let params = [];
-				if(module != null && module != ""){
-					if(whereSql==""){
-						whereSql += " WHERE ";
-					}
-					whereSql += "module=?";
-					params.push(module);
-				}
-				if(key != null && key != ""){
-					if(whereSql==""){
-						whereSql += " WHERE ";
-					}
-					whereSql += "key=?";
-					params.push(key);
-				}
-				
-				let sql = "SELECT * FROM settings" + whereSql;
+                let params = [];
+                if (module != null && module != "") {
+                    if (whereSql == "") {
+                        whereSql += " WHERE ";
+                    }
+                    whereSql += "module=?";
+                    params.push(module);
+                }
+                if (key != null && key != "") {
+                    if (whereSql == "") {
+                        whereSql += " WHERE ";
+                    }
+                    whereSql += "key=?";
+                    params.push(key);
+                }
+
+                let sql = "SELECT * FROM settings" + whereSql;
                 const datas = await sqlUtils.selectAll(db, sql, params);
 
                 sqlUtils.close(db);
@@ -276,7 +276,7 @@ const setSettings = () => {
                 await sqlUtils.update(db, "settings", {
                     value: value
                 }, {
-					module: module,
+                    module: module,
                     key: key
                 });
 
@@ -315,7 +315,7 @@ const openReadBookWindow = () => {
             modal: false,
             webPreferences: {
                 // 定义预加载的js
-                preload: path.resolve(app.getAppPath(), 'preload/readBook.js'),
+                preload: path.resolve(__dirname, '../../../electron/readBookPreload.js'),
             },
         });
         win.setMaximumSize(1920, 1080);
@@ -327,7 +327,11 @@ const openReadBookWindow = () => {
         // 将子窗口设置为主窗口的子窗口
         win.setParentWindow(mainWin);
 
-        win.loadURL('http://localhost:9999/readBook/' + bookId);
+        win.loadURL(
+            app.isPackaged
+                ? `file://${path.join(__dirname, '../../../dist/index.html')}#/readBook/${bookId}`
+                : `http://localhost:9999/#/readBook/${bookId}`
+        );
 
         // win.hookWindowMessage(278, function (e) {
         //     win.setEnabled(false); //窗口禁用
@@ -431,9 +435,9 @@ const getSettingConfig = async (module, key) => {
     try {
         db = await sqlUtils.open();
 
-		const data = await sqlUtils.selectOne(db, "SELECT * FROM settings WHERE module=? and key=?", [module, key]);
+        const data = await sqlUtils.selectOne(db, "SELECT * FROM settings WHERE module=? and key=?", [module, key]);
         sqlUtils.close(db);
-        return data==null?null:data.value;
+        return data == null ? null : data.value;
     } catch (error) {
         console.log(error);
         sqlUtils.close(db);
