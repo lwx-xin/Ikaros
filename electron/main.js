@@ -3,13 +3,28 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
 const mainProcessEvent = require('../src/common/processEvent/mainProcessEvent.js');
 
-const { winConfig } = require('../src/common/config/sysConfig.js');
+const ikarosUtil = require('../src/common/ikarosUtil.js')
 
 let mainWin;
 
-const createMainWin = () => {
+const createMainWin = async () => {
+    // 初始化Table
+    await ikarosUtil.initIkarosTable();
+    // 初始化settings
+    await ikarosUtil.initIkarosSettings();
+
+    // 获取窗口默认参数
+    let mainWinParams = { width: 800, height: 600 };
+    const mainWin_width = await ikarosUtil.getSettings("system", "mainWin_width");
+    const mainWin_height = await ikarosUtil.getSettings("system", "mainWin_height");
+    if (mainWin_width && mainWin_height) {
+        mainWinParams = {
+            width: Number(mainWin_width),
+            height: Number(mainWin_height)
+        }
+    }
     mainWin = new BrowserWindow({
-        ...winConfig.main,
+        ...mainWinParams,
 
         show: false,
         frame: false,
@@ -23,11 +38,18 @@ const createMainWin = () => {
         },
 
     });
+    console.log("主窗口", mainWin.getSize());
     // 移除默认的标题栏
     // mainWin.setMenu(null);
 
     mainWin.on('ready-to-show', () => {
-        // mainWin.show();
+        mainWin.show();
+        setMainHeight();
+    });
+
+    // 监听窗口大小改变事件
+    mainWin.on('resize', () => {
+        setMainHeight();
     });
 
     // 开发环境下，打开开发者工具。
@@ -91,3 +113,8 @@ app.whenReady().then(() => {
 //         app.quit();
 //     }
 // });
+
+const setMainHeight = () => {
+    // 可以在这里根据窗口高度来决定是否显示滚动条
+    mainWin.webContents.executeJavaScript(`document.querySelector(".home-main").style.height = (window.innerHeight-document.querySelector(".el-header").clientHeight)+"px"`);
+}

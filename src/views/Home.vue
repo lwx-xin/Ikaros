@@ -18,8 +18,6 @@ const router = useRouter()
 const ikarosStore = useIkarosStore()
 
 onMounted(async () => {
-	// 初始化settings
-	await mainWinApi.initSettings(false);
 
     ikarosStore.$patch((state) => {
         state.isMainPage = true;
@@ -52,7 +50,7 @@ const chat = () => {
 </script>
 
 <style scoped>
-.home>>>.el-card{
+.home>>>.el-card {
     width: 150px;
     margin: 10px;
     text-align: center;

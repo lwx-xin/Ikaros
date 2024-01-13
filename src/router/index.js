@@ -6,7 +6,7 @@ import Home from '@/views/Home.vue'
 import ShortcutKeys from '@/views/ShortcutKeys.vue'
 
 // 设置模块
-import Settings from '@/views/settings/Settings.vue'
+import Settings from '@/views/settings/index.vue'
 import Settings_System from '@/views/settings/System.vue'
 import Settings_FishBook from '@/views/settings/FishBook.vue'
 

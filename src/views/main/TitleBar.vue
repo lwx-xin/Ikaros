@@ -4,7 +4,7 @@
             <span v-show="ikarosStore.isMainPage">
                 IK
             </span>
-            <span v-show="!ikarosStore.isMainPage">
+            <span v-show="!ikarosStore.isMainPage" @click="back" class="back-win">
                 <el-icon>
                     <Back />
                 </el-icon>
@@ -28,6 +28,8 @@
 </template>
 
 <script setup>
+import { useRouter, useRoute } from 'vue-router'
+const router = useRouter()
 
 import { useIkarosStore } from "@/store/index.js"
 const ikarosStore = useIkarosStore()
@@ -39,11 +41,30 @@ const handleMinimize = () => {
 const handleClose = () => {
     mainWinApi.closeWindow();
 }
+
+const back = () => {
+    console.log("back",ikarosStore.pageTitle)
+    let path = "/main/home";
+    switch (ikarosStore.pageTitle) {
+        case 'Fish-Book':
+            path = "/main/home";
+            break;
+    }
+    router.push({
+        path: path
+    })
+}
 </script>
 
 <style scoped>
 .title-bar {
     -webkit-app-region: drag;
+}
+
+.back-win{
+    -webkit-app-region: no-drag;
+    display: inline-block;
+    padding: 0px 10px;
 }
 
 .min-win {

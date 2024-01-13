@@ -1,0 +1,9 @@
+{
+    "wordsPerPage": 40,
+    "textColor": "#ffffff",
+    "textBgColor": "#000000",
+    "bgOpacity": 0.7,
+    "resizable": true,
+    "fontSize": 16,
+    "letterSpacing": 0
+}

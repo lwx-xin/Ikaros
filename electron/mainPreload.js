@@ -36,32 +36,31 @@ const openReadBookWindow = (bookId) => {
     ipcRenderer.invoke("window-open-readBook", bookId);
 }
 
-const openBookDirectory = (fileName) => {
-    ipcRenderer.invoke("open-books-folder");
-}
-
 const uploadBook = () => {
     return ipcRenderer.invoke("upload-book");
 }
 
-const refreshBooks = () => {
-    return ipcRenderer.invoke("refresh-books");
-}
-
-const getBookInfoList = () => {
-    return ipcRenderer.invoke("get-book-info-list");
+const getBookShelfList = () => {
+    return ipcRenderer.invoke("get-book-shelf-list");
 }
 
 const getSettings = (module, key) => {
     return ipcRenderer.invoke('get-settings', module, key);
 }
 
+const getAllSettings = (module) => {
+    return ipcRenderer.invoke('get-all-settings', module);
+}
+
 const setSettings = (module, key, value) => {
     return ipcRenderer.invoke('set-settings', module, key, value);
 }
 
-const initSettings = (isInit) => {
-    return ipcRenderer.invoke('init-settings', isInit);
+const initSettings = (module) => {
+    return ipcRenderer.invoke('init-settings', module);
+}
+const initIkarosTable = () => {
+    return ipcRenderer.invoke('init-table');
 }
 
 contextBridge.exposeInMainWorld("mainWinApi", {
@@ -69,13 +68,15 @@ contextBridge.exposeInMainWorld("mainWinApi", {
     resizeMaxWindow,
     closeWindow,
     openReadBookWindow,
-    openBookDirectory,
+
     uploadBook,
-    refreshBooks,
-    getBookInfoList,
+    getBookShelfList,
+
     getSettings,
+    getAllSettings,
     setSettings,
     initSettings,
+    initIkarosTable,
 
     openHttpServer,
     sendHttpMessage,

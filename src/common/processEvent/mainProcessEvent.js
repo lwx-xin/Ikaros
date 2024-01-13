@@ -1,16 +1,27 @@
-const { ipcMain, BrowserWindow, screen, shell, dialog, app } = require('electron');
+const { ipcMain, BrowserWindow, screen, shell, dialog, app, globalShortcut } = require('electron');
 const path = require('path');
-const fs = require('fs');
-const readBookProcessEvent = require('./readBookProcessEvent.js');
-const sqlUtils = require('../sqlite/sql.js');
-const readline = require('readline');
-const { winConfig, moduleSettings } = require('../config/sysConfig');
+
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
+
+const readBookProcessEvent = require('./readBookProcessEvent.js');
+
+const bookSql = require('../sql/book.js')
+const bookShelfSql = require('../sql/bookShelf.js')
+const settingsSql = require('../sql/settings.js')
+
+const ikarosUtil = require('../ikarosUtil.js')
+
+const { readJsonSync, textFileReadLine } = require('../fsUtil.js')
 
 const { openServer_http, sendMessage_http } = require('../httpServer.js');
 const { openServer_ws, sendMessage_ws } = require('../websocket.js');
 
+const initIkarosTable = () => {
+    ipcMain.handle('init-table', async event => {
+        await ikarosUtil.initIkarosTable();
+    });
+}
 
 // 开启http服务
 const openHttpServer = () => {
@@ -85,18 +96,6 @@ const closeWindow = () => {
     });
 }
 
-// 打开书架目录
-const openBookDirectory = () => {
-    ipcMain.handle('open-books-folder', async (event) => {
-        try {
-            const fishBook_book_path = await getSettingConfig("fishBook", "bookPath");
-            shell.openPath(fishBook_book_path);
-        } catch (error) {
-            console.error(error);
-        }
-    });
-}
-
 // 上传book
 const uploadBook = () => {
     ipcMain.handle('upload-book', (event) => {
@@ -116,20 +115,6 @@ const uploadBook = () => {
 
                     // 将文件读取到DB
                     await saveBookData(filePath);
-
-                    // 后缀名
-                    const extname = path.extname(fileName);
-                    // 不带后缀的文件名
-                    const basename = path.basename(fileName, extname);
-                    // 时间戳
-                    const timestamp = new Date().getTime();
-                    // 格式化后的文件名
-                    let fileTargetName = basename + "_" + timestamp + extname;
-
-                    // 将上传的文件付备份到targetPath目录下
-                    const fishBook_book_path = await getSettingConfig("fishBook", "bookPath");
-                    await fs.copyFileSync(filePath, path.join(fishBook_book_path, fileTargetName));
-
                 }
                 resolve(fileName);
             } catch (error) {
@@ -140,159 +125,38 @@ const uploadBook = () => {
     });
 }
 
-// 同步书架
-const refreshBooks = () => {
-    ipcMain.handle('refresh-books', (event) => {
-        return new Promise(async (resolve, reject) => {
-            const fishBook_book_path = await getSettingConfig("fishBook", "bookPath");
-            const files = fs.readdirSync(fishBook_book_path);
-            try {
-                for (const fileName of files) {
-                    const bookPath = path.join(fishBook_book_path, fileName);
-                    const bookId = await saveBookData(bookPath);
-                    console.log("图书" + fileName + "【" + bookId + "】" + "同步成功");
-                }
-                resolve();
-            } catch (error) {
-                console.log(error);
-                reject(error);
-            }
-        });
-    });
-}
-
-const getBookInfoList = () => {
-    ipcMain.handle('get-book-info-list', (event) => {
-        return new Promise(async (resolve, reject) => {
-            let db;
-            try {
-                db = await sqlUtils.open();
-                const bookInfoList = await sqlUtils.select(db, "book_list", null, null);
-
-                sqlUtils.close(db);
-                resolve(bookInfoList);
-            } catch (error) {
-                console.log(error);
-                sqlUtils.close(db);
-                reject(error);
-            }
-        })
+const getBookShelfList = () => {
+    ipcMain.handle('get-book-shelf-list', (event) => {
+        return bookShelfSql.getList();
     });
 }
 
 const initSettings = () => {
-    ipcMain.handle('init-settings', (event, isInit) => {
-        return new Promise(async (resolve, reject) => {
-            let db;
-            try {
-                let allConfig = [];
+    ipcMain.handle('init-settings', (event, module) => {
+        return ikarosUtil.initIkarosSettings(module);
+    });
+}
 
-                for (const [module, settings] of Object.entries(moduleSettings)) {
-                    for (const [setKey, setVal] of Object.entries(settings)) {
-                        allConfig.push({
-                            module: module,
-                            key: setKey,
-                            value: setVal,
-                        });
-                    }
-                }
-
-                db = await sqlUtils.open();
-
-                if (isInit) {
-                    await sqlUtils.del(db, "settings", {});
-                }
-
-                let configData = [];
-                for (let i = 0; i < allConfig.length; i++) {
-                    const config = allConfig[i];
-                    const data = await sqlUtils.selectOne(db, "SELECT count(1) as count FROM settings WHERE module=? and key=?", [config.module, config.key]);
-
-                    if (data == null || data.count == 0) {
-                        configData.push(config);
-                    }
-                }
-
-                if (configData.length > 0) {
-                    await sqlUtils.insertBatch(db, "settings", configData, 100);
-                }
-
-                sqlUtils.close(db);
-                resolve();
-            } catch (error) {
-                console.log(error);
-                sqlUtils.close(db);
-                reject(error);
-            }
-        })
+const getAllSettings = () => {
+    ipcMain.handle('get-all-settings', (event, module) => {
+        return settingsSql.getAll(module)
     });
 }
 
 const getSettings = () => {
     ipcMain.handle('get-settings', (event, module, key) => {
-        return new Promise(async (resolve, reject) => {
-            let db;
-            try {
-                db = await sqlUtils.open();
-
-                let whereSql = "";
-                let params = [];
-                if (module != null && module != "") {
-                    if (whereSql == "") {
-                        whereSql += " WHERE ";
-                    }
-                    whereSql += "module=?";
-                    params.push(module);
-                }
-                if (key != null && key != "") {
-                    if (whereSql == "") {
-                        whereSql += " WHERE ";
-                    }
-                    whereSql += "key=?";
-                    params.push(key);
-                }
-
-                let sql = "SELECT * FROM settings" + whereSql;
-                const datas = await sqlUtils.selectAll(db, sql, params);
-
-                sqlUtils.close(db);
-                resolve(datas);
-            } catch (error) {
-                console.log(error);
-                sqlUtils.close(db);
-                reject(error);
-            }
-        })
+        return ikarosUtil.getSettings(module, key);
     });
 }
 
 const setSettings = () => {
     ipcMain.handle('set-settings', (event, module, key, value) => {
-        return new Promise(async (resolve, reject) => {
-            let db;
-            try {
-                db = await sqlUtils.open();
-
-                await sqlUtils.update(db, "settings", {
-                    value: value
-                }, {
-                    module: module,
-                    key: key
-                });
-
-                sqlUtils.close(db);
-                resolve();
-            } catch (error) {
-                console.log(error);
-                sqlUtils.close(db);
-                reject(error);
-            }
-        })
+        settingsSql.update(module, key, value);
     });
 }
 
 const openReadBookWindow = () => {
-    ipcMain.handle('window-open-readBook', (event, bookId) => {
+    ipcMain.handle('window-open-readBook', async (event, bookId) => {
         const webContent = event.sender;
         const mainWin = BrowserWindow.fromWebContents(webContent);
 
@@ -300,9 +164,21 @@ const openReadBookWindow = () => {
         // 获取屏幕尺寸
         // const { width } = screen.getPrimaryDisplay().workAreaSize;
 
+        // 获取窗口默认参数
+        let readBookWinParams = { width: 800, height: 600 };
+        const readBookWin_width = await ikarosUtil.getSettings("system", "readBookWin_width");
+        const readBookWin_height = await ikarosUtil.getSettings("system", "readBookWin_height");
+        if (readBookWin_width && readBookWin_height) {
+            readBookWinParams = {
+                width: Number(readBookWin_width),
+                height: Number(readBookWin_height)
+            }
+        }
+        console.log("readBookWinParams", readBookWinParams);
+
         // 创建一个新的无边框窗口
         let win = new BrowserWindow({
-            ...winConfig.readBook,
+            ...readBookWinParams,
 
             // x: Math.floor((width - 800) / 2), // 窗口在 X 轴上的位置居中
             // y: 0, // 窗口在 Y 轴上的位置放置在屏幕底部
@@ -357,38 +233,20 @@ const openReadBookWindow = () => {
             }
         }
         global.readWindow = win;
-    });
-}
 
-// 按行读取文件
-const textFileReadLine = (filePath) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const rl = readline.createInterface({
-                input: fs.createReadStream(filePath),
-                output: process.stdout,
-                terminal: false
-            });
-
-            let data = [];
-            rl.on('line', (line) => {
-                data.push(line);
-            });
-            rl.on('close', async () => {
-                rl.close();
-                resolve(data);
-            });
-        } catch (error) {
-            reject(error);
-        }
+        // 注册快捷键
+        globalShortcut.register('CommandOrControl+Shift+D', () => {
+            console.log('CommandOrControl+Shift+D is pressed');
+        })
+        globalShortcut.register('CommandOrControl+Shift+V', () => {
+            console.log('CommandOrControl+Shift+V is pressed');
+        })
     });
 }
 
 const saveBookData = (bookPath) => {
     return new Promise(async (resolve, reject) => {
-        let db;
         try {
-            db = await sqlUtils.open();
             // 生成book ID(唯一)
             const bookId = uuidv4();
             // 文件数据-按行读取
@@ -413,48 +271,36 @@ const saveBookData = (bookPath) => {
                     content: bookLine
                 });
             }
-            await sqlUtils.insertBatch(db, "book", dataArr, 1000)
 
-            await sqlUtils.insert(db, "book_list", {
+            await bookSql.insertBatch(dataArr);
+
+            await bookShelfSql.update({
                 id: bookId,
                 name: fileName,
                 words: end,
                 end: 1
             });
-            sqlUtils.close(db);
+
             resolve(bookId);
         } catch (error) {
-            sqlUtils.close(db);
             reject(error);
         }
     });
 }
 
-const getSettingConfig = async (module, key) => {
-    let db;
-    try {
-        db = await sqlUtils.open();
-
-        const data = await sqlUtils.selectOne(db, "SELECT * FROM settings WHERE module=? and key=?", [module, key]);
-        sqlUtils.close(db);
-        return data == null ? null : data.value;
-    } catch (error) {
-        console.log(error);
-        sqlUtils.close(db);
-    }
-}
-
 module.exports = {
+    initIkarosTable,
     resizeMinWindow,
     resizeMaxWindow,
     closeWindow,
-    openBookDirectory,
     openReadBookWindow,
+
     uploadBook,
-    refreshBooks,
-    getBookInfoList,
+    getBookShelfList,
+
     setSettings,
     getSettings,
+    getAllSettings,
     initSettings,
 
     openHttpServer,

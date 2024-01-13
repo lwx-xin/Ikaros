@@ -38,6 +38,10 @@
 
 .side-menu>>>.el-aside {
     width: auto;
+    height: 100%;
+}
+.side-menu>>>.el-aside>ul {
+    height: 100%;
 }
 
 .side-menu>>>.el-menu-item {

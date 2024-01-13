@@ -7,18 +7,6 @@
                     <Upload />
                 </el-icon>
             </el-button>
-            <el-button type="primary" @click="openBookDirectory" v-if="true">
-                打开书架目录
-                <el-icon class="el-icon--right">
-                    <Upload />
-                </el-icon>
-            </el-button>
-            <el-button type="primary" @click="refreshBooks" v-if="true">
-                同步书架
-                <el-icon>
-                    <Refresh />
-                </el-icon>
-            </el-button>
         </el-row>
         <el-row class="book-list">
             <template v-for="book in bookList">
@@ -54,13 +42,8 @@ onMounted(() => {
         state.isMainPage = false;
         state.pageTitle = "Fish-Book";
     });
-    getBookInfoList();
+    getBookShelfList();
 })
-
-// 打开本地书架目录
-const openBookDirectory = () => {
-    mainWinApi.openBookDirectory();
-}
 
 // 上传小说
 const uploadBook = async () => {
@@ -68,7 +51,7 @@ const uploadBook = async () => {
         loading.value = true;
         // 上传
         const bookName = await mainWinApi.uploadBook();
-        bookList.value = await mainWinApi.getBookInfoList();
+        bookList.value = await mainWinApi.getBookShelfList();
         // 重新加载列表
         if (bookName) {
             ElNotification({
@@ -79,6 +62,7 @@ const uploadBook = async () => {
         }
         loading.value = false;
     } catch (error) {
+        console.error(error);
         loading.value = false;
         ElNotification({
             offset: 100,
@@ -88,35 +72,11 @@ const uploadBook = async () => {
     }
 }
 
-// 同步书架数据
-const refreshBooks = async () => {
-    loading.value = true;
-
-    try {
-        await mainWinApi.refreshBooks();
-
-        bookList.value = await mainWinApi.getBookInfoList();
-        ElNotification({
-            offset: 100,
-            message: "同步成功",
-            type: 'success',
-        })
-    } catch (error) {
-        ElNotification({
-            offset: 100,
-            message: "同步失败",
-            type: 'error',
-        })
-    }
-    loading.value = false;
-
-}
-
 // 加载书架信息
-const getBookInfoList = async () => {
+const getBookShelfList = async () => {
     loading.value = true;
     try {
-        bookList.value = await mainWinApi.getBookInfoList();
+        bookList.value = await mainWinApi.getBookShelfList(); 
         ElNotification({
             offset: 100,
             message: "书架信息读取成功",
