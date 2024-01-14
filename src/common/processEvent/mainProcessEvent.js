@@ -1,6 +1,8 @@
 const { ipcMain, BrowserWindow, screen, shell, dialog, app, globalShortcut } = require('electron');
 const path = require('path');
 
+const { registerReadWindowShortcuts, unregisterReadWindowShortcuts } = require('../shortcut.js');
+
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
 
@@ -186,7 +188,7 @@ const openReadBookWindow = () => {
             show: true,
             fullscreenable: false,
             transparent: true,
-            resizable: true,
+            resizable: false,
             movable: true,
             modal: false,
             webPreferences: {
@@ -222,6 +224,13 @@ const openReadBookWindow = () => {
         win.on('closed', () => {
             // 将子窗口对象置为 null
             win = null;
+            // 解绑快捷键
+            unregisterReadWindowShortcuts();
+        });
+
+        win.on('ready-to-show', () => {
+            // 注册快捷键
+            registerReadWindowShortcuts(win);
         });
 
         if (global.readWindow == null) {
@@ -233,14 +242,6 @@ const openReadBookWindow = () => {
             }
         }
         global.readWindow = win;
-
-        // 注册快捷键
-        globalShortcut.register('CommandOrControl+Shift+D', () => {
-            console.log('CommandOrControl+Shift+D is pressed');
-        })
-        globalShortcut.register('CommandOrControl+Shift+V', () => {
-            console.log('CommandOrControl+Shift+V is pressed');
-        })
     });
 }
 

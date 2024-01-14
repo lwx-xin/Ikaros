@@ -20,12 +20,28 @@ import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute();
+
+// 当前阅读的书籍id
 const bookId = ref(route.params.bookId);
+
+// 每页显示的文字数量
 let wordsPerPage = ref(10);
+
+// 文本内容
+const content = ref('');
 
 onMounted(async () => {
     await getBookSettingInfo();
     await readFile(bookId, wordsPerPage, "");
+
+
+    fishBookWinApi.readPrePage(async () => {
+        await readFile(bookId, wordsPerPage, "before");
+    });
+
+    fishBookWinApi.readNextPage(async () => {
+        await readFile(bookId, wordsPerPage, "next");
+    });
 })
 
 const getBookSettingInfo = async () => {
@@ -35,8 +51,6 @@ const getBookSettingInfo = async () => {
 const handleClose = () => {
     fishBookWinApi.closeWindow();
 }
-
-const content = ref('');
 
 const readFile = async (bookId, wordsPerPage, type) => {
     const data = await fishBookWinApi.readFile(bookId.value, wordsPerPage.value, type);

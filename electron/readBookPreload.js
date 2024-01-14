@@ -9,7 +9,18 @@ const closeWindow = () => {
     ipcRenderer.invoke("fishBook-window-close");
 }
 
+const readPrePage = (callback) => {
+    return ipcRenderer.on('pre-page', callback);
+}
+
+const readNextPage = (callback) => {
+    return ipcRenderer.on('next-page', callback);
+}
+
 contextBridge.exposeInMainWorld("fishBookWinApi", {
     readFile,
-    closeWindow
+    closeWindow,
+
+    readPrePage,
+    readNextPage
 });
