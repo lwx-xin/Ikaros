@@ -16,7 +16,7 @@ import ReadBook from '@/views/fishBook/readBook.vue'
 
 // 游戏模块
 import Game from '@/views/game/index.vue'
-import Snake from '@/views/game/snake.vue'
+import Snake from '@/views/game/snake/snake.vue'
 import Gobang from '@/views/game/gobang.vue'
 
 // 聊天模块
